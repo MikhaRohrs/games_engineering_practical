@@ -19,11 +19,16 @@ constexpr int game_height = 600;
 constexpr float paddle_speed = 400.0f;
 
 Vector2f ball_velocity;
-bool server = false;
+bool player2_serves = false;
 bool ai = true;
+int score1 = 0; // Score for player 1 (ball hits right wall)
+int score2 = 0; // Score for player 2 (ball hits left wall)
 
 CircleShape ball;
 RectangleShape paddles[2];
+
+Font font;
+Text score_text;
 
 void reset()
 {
@@ -32,7 +37,10 @@ void reset()
 
 	ball.setPosition(Vector2(game_width / 2.0f, game_height / 2.0f));
 
-	ball_velocity = {(server ? 100.0f : -100.0f), 60.0f};
+	ball_velocity = {(player2_serves ? 100.0f : -100.0f), 60.0f};
+
+	score_text.setString(to_string(score1) + " : " + to_string(score2));
+	score_text.setPosition(Vector2((game_width * 0.5f) - (score_text.getLocalBounds().width * 0.5f), 0.0f));
 }
 
 void load()
@@ -47,6 +55,10 @@ void load()
 	ball.setOrigin(Vector2f(ball_radius / 2.0f, ball_radius / 2.0f));
 
 	reset();
+
+	font.loadFromFile("res/fonts/RobotoMono-Regular.ttf");
+	score_text.setFont(font);
+	score_text.setCharacterSize(24);
 }
 
 void update(RenderWindow& window)
@@ -135,17 +147,31 @@ void update(RenderWindow& window)
 	paddles[1].move(Vector2(0.0f, direction2 * paddle_speed * dt));
 
 	ball.move(ball_velocity * dt);
-
+	
 	// Check for ball collision
 	const float bx = ball.getPosition().x;
-	if (by > game_height || by < 0) // Bottom OR top wall
+	if (by > game_height) // Bottom wall
 	{
 		ball_velocity.x *= 1.1f;
 		ball_velocity.y *= -1.1f;
 		ball.move(Vector2(0.0f, -10.0f));
 	}
-	else if (bx > game_width || bx < 0) // Right OR left wall
+	else if(by < 0) // Top wall
 	{
+		ball_velocity.x *= 1.1f;
+		ball_velocity.y *= -1.1f;
+		ball.move(Vector2(0.0f, 10.0f));
+	}
+	else if (bx > game_width) // Right wall
+	{
+		score1++;
+		player2_serves = true;
+		reset();
+	}
+	else if(bx < 0) // Left wall
+	{
+		score2++;
+		player2_serves = false;
 		reset();
 	}
 	else if ( // Left paddle
@@ -158,7 +184,8 @@ void update(RenderWindow& window)
 		by < paddles[1].getPosition().y + (paddle_size.y * 0.5f))
 	)
 	{
-		ball_velocity = -ball_velocity;
+		ball_velocity.x *= -1.1f;
+		ball_velocity.y *= 1.1f;
 	}
 }
 
