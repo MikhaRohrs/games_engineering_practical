@@ -4,7 +4,7 @@
 using namespace sf;
 using namespace std;
 
-const Keyboard::Key controls[4] = 
+constexpr Keyboard::Key controls[4] =
 {
 	Keyboard::W, // Player1 UP
 	Keyboard::S, // Player1 DOWN
@@ -12,51 +12,51 @@ const Keyboard::Key controls[4] =
 	Keyboard::Down // Player2 DOWN
 };
 
-const Vector2f paddleSize(25.0f, 100.0f);
-const float ballRadius = 10.0f;
-const int gameWidth = 800;
-const int gameHeight = 600;
-const float paddleSpeed = 400.0f;
+constexpr Vector2f paddle_size(25.0f, 100.0f);
+constexpr float ball_radius = 10.0f;
+constexpr int game_width = 800;
+constexpr int game_height = 600;
+constexpr float paddle_speed = 400.0f;
 
-Vector2f ballVelocity;
+Vector2f ball_velocity;
 bool server = false;
 bool ai = true;
 
 CircleShape ball;
 RectangleShape paddles[2];
 
-void Reset()
+void reset()
 {
-	paddles[0].setPosition(Vector2(paddleSize.x / 2.0f, gameHeight / 2.0f));
-	paddles[1].setPosition(Vector2(gameWidth - paddleSize.x / 2.0f, gameHeight / 2.0f));
+	paddles[0].setPosition(Vector2(paddle_size.x / 2.0f, game_height / 2.0f));
+	paddles[1].setPosition(Vector2(game_width - paddle_size.x / 2.0f, game_height / 2.0f));
 
-	ball.setPosition(Vector2(gameWidth / 2.0f, gameHeight / 2.0f));
+	ball.setPosition(Vector2(game_width / 2.0f, game_height / 2.0f));
 
-	ballVelocity = { (server ? 100.0f : -100.0f), 60.0f };
+	ball_velocity = {(server ? 100.0f : -100.0f), 60.0f};
 }
 
-void Load()
+void load()
 {
 	for (auto& p : paddles)
 	{
-		p.setSize(paddleSize - Vector2f(3, 3));
-		p.setOrigin(paddleSize / 2.0f);
+		p.setSize(paddle_size - Vector2f(3, 3));
+		p.setOrigin(paddle_size / 2.0f);
 	}
 
-	ball.setRadius(ballRadius);
-	ball.setOrigin(Vector2f(ballRadius / 2.0f, ballRadius / 2.0f));
+	ball.setRadius(ball_radius);
+	ball.setOrigin(Vector2f(ball_radius / 2.0f, ball_radius / 2.0f));
 
-	Reset();
+	reset();
 }
 
-void Update(RenderWindow& window)
+void update(RenderWindow& window)
 {
 	// Reset clock, recalculate delta time
 	static Clock clock;
-	float dt = clock.restart().asSeconds();
+	const float dt = clock.restart().asSeconds();
 
 	// Check and consume events
-	Event event;
+	Event event{};
 	while (window.pollEvent(event))
 	{
 		if (event.type == Event::Closed)
@@ -86,20 +86,21 @@ void Update(RenderWindow& window)
 	{
 		direction1++;
 	}
-	if(paddles[0].getPosition().y - (paddleSize.y * 0.5) < 0)
+	// Prevent left paddle from going off screen
+	if (paddles[0].getPosition().y - (paddle_size.y * 0.5f) < 0)
 	{
 		direction1++;
 	}
-	if (paddles[0].getPosition().y + (paddleSize.y * 0.5) > gameHeight)
+	if (paddles[0].getPosition().y + (paddle_size.y * 0.5f) > game_height)
 	{
 		direction1--;
 	}
-	paddles[0].move(Vector2(0.0f, direction1 * paddleSpeed * dt));
+	paddles[0].move(Vector2(0.0f, direction1 * paddle_speed * dt));
 
 	// Handle right paddle movement
 	float direction2 = 0.0f;
 	const float by = ball.getPosition().y;
-	if(!ai) // Player 2 uses arrow keys
+	if (!ai) // If right paddle is controlled by player 2 (arrow keys)
 	{
 		if (Keyboard::isKeyPressed(controls[2]))
 		{
@@ -110,71 +111,58 @@ void Update(RenderWindow& window)
 			direction2++;
 		}
 	}
-	else // Basic AI
+	else // If right paddle is controlled by basic ai
 	{
-		if(by < paddles[1].getPosition().y)
+		if (by < paddles[1].getPosition().y)
 		{
 			direction2--;
 		}
-		if(by > paddles[1].getPosition().y)
+		if (by > paddles[1].getPosition().y)
 		{
 			direction2++;
 		}
 	}
-	if (paddles[1].getPosition().y - (paddleSize.y * 0.5) < 0)
+	// Prevent right paddle from going off screen
+	if (paddles[1].getPosition().y - (paddle_size.y * 0.5f) < 0)
 	{
 		direction2++;
 	}
-	if (paddles[1].getPosition().y + (paddleSize.y * 0.5) > gameHeight)
+	if (paddles[1].getPosition().y + (paddle_size.y * 0.5f) > game_height)
 	{
 		direction2--;
 	}
 	direction2 = clamp(direction2, -1.0f, 1.0f);
-	paddles[1].move(Vector2(0.0f, direction2 * paddleSpeed * dt));
+	paddles[1].move(Vector2(0.0f, direction2 * paddle_speed * dt));
 
-	ball.move(ballVelocity * dt);
+	ball.move(ball_velocity * dt);
 
 	// Check for ball collision
 	const float bx = ball.getPosition().x;
-	if (by > gameHeight) // Bottom wall
+	if (by > game_height || by < 0) // Bottom OR top wall
 	{
-		ballVelocity.x *= 1.1f;
-		ballVelocity.y *= -1.1f;
+		ball_velocity.x *= 1.1f;
+		ball_velocity.y *= -1.1f;
 		ball.move(Vector2(0.0f, -10.0f));
 	}
-	else if (by < 0) // Top wall
+	else if (bx > game_width || bx < 0) // Right OR left wall
 	{
-		ballVelocity.x *= 1.1f;
-		ballVelocity.y *= -1.1f;
-		ball.move(Vector2(0.0f, -10.0f));
-	}
-	else if (bx > gameWidth) // Right wall
-	{
-		Reset();
-	}
-	else if (bx < 0) // Left wall
-	{
-		Reset();
+		reset();
 	}
 	else if ( // Left paddle
-		bx < paddleSize.x && //Ball is inline or behind paddle
-		by > paddles[0].getPosition().y - (paddleSize.y * 0.5) && // AND ball is below top edge of paddle
-		by < paddles[0].getPosition().y + (paddleSize.y * 0.5) // AND ball is above bottom edge of paddle
-		)
+		(bx < paddle_size.x && //Ball is inline or behind paddle
+		by > paddles[0].getPosition().y - (paddle_size.y * 0.5f) && // AND ball is below top edge of paddle
+		by < paddles[0].getPosition().y + (paddle_size.y * 0.5f)) || // AND ball is above bottom edge of paddle
+		// OR Right paddle
+		(bx > game_width - paddle_size.x &&
+		by > paddles[1].getPosition().y - (paddle_size.y * 0.5f) &&
+		by < paddles[1].getPosition().y + (paddle_size.y * 0.5f))
+	)
 	{
-		ballVelocity = -ballVelocity;
-	}
-	else if ( // Right paddle
-		bx > gameWidth - paddleSize.x &&
-		by > paddles[1].getPosition().y - (paddleSize.y * 0.5) &&
-		by < paddles[1].getPosition().y + (paddleSize.y * 0.5)
-		)
-	{
-		ballVelocity = -ballVelocity;
+		ball_velocity = -ball_velocity;
 	}
 }
 
-void Render(RenderWindow& window)
+void render(RenderWindow& window)
 {
 	window.draw(paddles[0]);
 	window.draw(paddles[1]);
@@ -183,13 +171,13 @@ void Render(RenderWindow& window)
 
 int main()
 {
-	RenderWindow window(VideoMode(gameWidth, gameHeight), "PONG");
-	Load();
+	RenderWindow window(VideoMode(game_width, game_height), "PONG");
+	load();
 	while (window.isOpen())
 	{
 		window.clear();
-		Update(window);
-		Render(window);
+		update(window);
+		render(window);
 		window.display();
 	}
 }
