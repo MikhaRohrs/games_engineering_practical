@@ -177,15 +177,20 @@ void update(RenderWindow& window)
 	else if ( // Left paddle
 		(bx < paddle_size.x && //Ball is inline or behind paddle
 		by > paddles[0].getPosition().y - (paddle_size.y * 0.5f) && // AND ball is below top edge of paddle
-		by < paddles[0].getPosition().y + (paddle_size.y * 0.5f)) || // AND ball is above bottom edge of paddle
-		// OR Right paddle
-		(bx > game_width - paddle_size.x &&
-		by > paddles[1].getPosition().y - (paddle_size.y * 0.5f) &&
-		by < paddles[1].getPosition().y + (paddle_size.y * 0.5f))
-	)
+		by < paddles[0].getPosition().y + (paddle_size.y * 0.5f))) // AND ball is above bottom edge of paddle
 	{
 		ball_velocity.x *= -1.1f;
 		ball_velocity.y *= 1.1f;
+		ball.move(Vector2(10.0f, 0.0f));
+	}
+	else if ( // Right paddle
+		bx > game_width - paddle_size.x &&
+		by > paddles[1].getPosition().y - (paddle_size.y * 0.5f) &&
+		by < paddles[1].getPosition().y + (paddle_size.y * 0.5f))
+	{
+		ball_velocity.x *= -1.1f;
+		ball_velocity.y *= 1.1f;
+		ball.move(Vector2(-10.0f, 0.0f));
 	}
 }
 
@@ -194,6 +199,7 @@ void render(RenderWindow& window)
 	window.draw(paddles[0]);
 	window.draw(paddles[1]);
 	window.draw(ball);
+	window.draw(score_text);
 }
 
 int main()
