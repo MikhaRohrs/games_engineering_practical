@@ -4,7 +4,7 @@
 using namespace sf;
 using namespace std;
 
-constexpr Keyboard::Key controls[4] =
+constexpr Keyboard::Key CONTROLS[4] =
 {
 	Keyboard::W, // Player1 UP
 	Keyboard::S, // Player1 DOWN
@@ -43,7 +43,7 @@ void reset()
 	score_text.setPosition(Vector2((game_width * 0.5f) - (score_text.getLocalBounds().width * 0.5f), 0.0f));
 }
 
-void load()
+void Load()
 {
 	for (auto& p : paddles)
 	{
@@ -61,7 +61,7 @@ void load()
 	score_text.setCharacterSize(24);
 }
 
-void update(RenderWindow& window)
+void Update(RenderWindow& window)
 {
 	// Reset clock, recalculate delta time
 	static Clock clock;
@@ -90,11 +90,11 @@ void update(RenderWindow& window)
 
 	// Handle left paddle movement
 	float direction1 = 0.0f;
-	if (Keyboard::isKeyPressed(controls[0]))
+	if (Keyboard::isKeyPressed(CONTROLS[0]))
 	{
 		direction1--;
 	}
-	if (Keyboard::isKeyPressed(controls[1]))
+	if (Keyboard::isKeyPressed(CONTROLS[1]))
 	{
 		direction1++;
 	}
@@ -114,11 +114,11 @@ void update(RenderWindow& window)
 	const float by = ball.getPosition().y;
 	if (!ai) // If right paddle is controlled by player 2 (arrow keys)
 	{
-		if (Keyboard::isKeyPressed(controls[2]))
+		if (Keyboard::isKeyPressed(CONTROLS[2]))
 		{
 			direction2--;
 		}
-		if (Keyboard::isKeyPressed(controls[3]))
+		if (Keyboard::isKeyPressed(CONTROLS[3]))
 		{
 			direction2++;
 		}
@@ -194,7 +194,7 @@ void update(RenderWindow& window)
 	}
 }
 
-void render(RenderWindow& window)
+void Render(RenderWindow& window)
 {
 	window.draw(paddles[0]);
 	window.draw(paddles[1]);
@@ -205,12 +205,12 @@ void render(RenderWindow& window)
 int main()
 {
 	RenderWindow window(VideoMode(game_width, game_height), "PONG");
-	load();
+	Load();
 	while (window.isOpen())
 	{
 		window.clear();
-		update(window);
-		render(window);
+		Update(window);
+		Render(window);
 		window.display();
 	}
 }
